@@ -226,6 +226,7 @@ io.on('connection', function(socket){
 
 	//receives a room from the clients. checks to see if the room exists. if it does then connects them to existing room. if it doesn't, creates a new room
 	socket.on('send room', function(room){
+					console.log('Received send room');
 		room = sanitize(room);
 		var cleanroom = room.toLowerCase();
 		if(cleanroom.length == 0) {
@@ -236,15 +237,18 @@ io.on('connection', function(socket){
 			addRoom(new Room(room));
 			socket.room = cleanroom;
 			socket.join(cleanroom);
+						console.log('Sending room response');
 			io.sockets.connected[socket.id].emit('get room', rooms[cleanroom].name);
 			delete roomreq[socket.id];
 		}
 		else if(rooms[cleanroom].users.length>=25){
+						console.log('Sending room response');
 			io.sockets.connected[socket.id].emit('room full',room)
 		}
 		else{
 			socket.room = cleanroom;
 			socket.join(cleanroom);
+			console.log('Sending room response');
 			io.sockets.connected[socket.id].emit('get room', rooms[cleanroom].name);
 			delete roomreq[socket.id];
 		}
