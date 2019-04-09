@@ -296,6 +296,6 @@ setInterval(function(){
 }, 1000);
 
 //has the server start and listen on port 8080
-http.listen(8080, function(){
-	console.log('listening on *:8080');
+http.listen(process.env.PORT || 8080, function(){
+	console.log('listening on port');
 });
