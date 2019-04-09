@@ -1,4 +1,7 @@
-var socket = io.connect();
+var socket = io.connect({
+    upgrade: false,
+    transports: ['websocket']
+});
 var name = "";
 var room = "";
 var title = "";
@@ -427,11 +430,10 @@ socket.on('pong',function(){
 	lastping = Date.now();
 });
 
-/*
 setInterval(function(){
 	socket.emit('ping');
 	if(Date.now()-lastping>=10000&&!canReload){
 		reload();
 		canReload = false;
 	}
-},2000) */
+},2000)

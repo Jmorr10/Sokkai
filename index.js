@@ -164,6 +164,7 @@ function User(name, socketID, roomName){
 
 //socket connection stuff
 io.on('connection', function(socket){
+				console.log('CONNECTED!');
 	//ip logging. Writes IP address to a file when a client connects to the server.
 	//ips[socket.id] = socket.request.connection.remoteAddress;
 	//fs.appendFile('iplog.log',  new Date(Date.now()) + "\t" + socket.request.connection.remoteAddress  + "\r\n", function(e){
