@@ -427,10 +427,11 @@ socket.on('pong',function(){
 	lastping = Date.now();
 });
 
+/*
 setInterval(function(){
 	socket.emit('ping');
 	if(Date.now()-lastping>=10000&&!canReload){
 		reload();
 		canReload = false;
 	}
-},2000)
+},2000) */
