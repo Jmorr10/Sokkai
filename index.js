@@ -4,7 +4,7 @@ var zlib = require('zlib');
 var md5 = require(__dirname+'/md5.js');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var fs = require('fs');
+//var fs = require('fs');
 var users = {};
 var rooms = {};
 var ips = {"": ""};
@@ -165,9 +165,9 @@ function User(name, socketID, roomName){
 //socket connection stuff
 io.on('connection', function(socket){
 	//ip logging. Writes IP address to a file when a client connects to the server.
-	ips[socket.id] = socket.request.connection.remoteAddress;
-	fs.appendFile('iplog.log',  new Date(Date.now()) + "\t" + socket.request.connection.remoteAddress  + "\r\n", function(e){
-	});
+	//ips[socket.id] = socket.request.connection.remoteAddress;
+	//fs.appendFile('iplog.log',  new Date(Date.now()) + "\t" + socket.request.connection.remoteAddress  + "\r\n", function(e){
+	//});
 
 	//recieves a buzz signal from the clients. Calls room's buzz method
 	socket.on('buzz', function(){
@@ -277,7 +277,7 @@ io.on('connection', function(socket){
 });
 
 //prints out the number of connected clients and their ips every 5 minutes
-setInterval(function(){
+/*setInterval(function(){
 	console.log(new Date(Date.now()));
 	console.log("Active users: " + Object.keys(users).length);
 	for (var i = 0; i < Object.keys(ips).length; i++) {
@@ -286,7 +286,7 @@ setInterval(function(){
 		}
 	}
 	console.log("");
-}, 300000);
+}, 300000);*/
 
 //loops through the map of rooms to perform server-side autoclearing functions every second
 setInterval(function(){
