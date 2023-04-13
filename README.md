@@ -6,5 +6,5 @@ Go to the <a href="https://sokkai.jrmsoftworks.com">website</a> and have everyon
 Sokkai is a free online buzzer system. It is a website so it should work cross-platform without any major compatibility issues (it should work on whatever device you want as long as it has an internet connection and a modern web browser). Nothing fancy...just a regular buzzer system. It tells you who buzzed and has lockout functionality. Yay!
 
 ## Who
-Sokkai is a cloned/revamped version of QBBuzzer - https://github.com/jonathanluck/qbbuzzer
+Sokkai is a cloned/revamped version of QBBuzzer (jonathanluck/qbbuzzer).
 The main differences are: visual overhaul, Japanese language support, various fixes. The code has been edited/fixed only as necessary.
