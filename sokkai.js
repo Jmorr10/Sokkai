@@ -1,3 +1,5 @@
+// TODO: Cleanup and refactor previous creator's code.
+
 let socket = io.connect(
 	window.location.origin,
 	{
@@ -18,6 +20,7 @@ let name = "";
 let room = "";
 let title = "";
 let playsound = true;
+let playSoundDisabled = false;
 let dispinfo = true;
 let disphist = true;
 let dispsettings = false;
@@ -28,7 +31,7 @@ let emptyname = false;
 let finished = false;
 let canSpace = true;
 let lastping = Date.now();
-let canReload = false;
+let canReload = true;
 let lastbuzz = 0;
 let timeoutID;
 let clearTimer;
@@ -36,6 +39,7 @@ let newLink = document.createElement('link');
 let redIcon = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAJOgAACToAYJjBRwAAAAMSURBVBhXY7jIxQUAApUA5qdS4JwAAAAASUVORK5CYII="
 let greenIcon = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAJOgAACToAYJjBRwAAAAMSURBVBhXY+BfLAMAAZMAz1929fMAAAAASUVORK5CYII="
 
+const DEFAULT_NOTICE_DURATION = 2500;
 
 let usernameInput;
 let roomNameInput;
@@ -147,17 +151,33 @@ function getroomlist() {
 
 function reload() {
 	lastping = Date.now();
-	localStorage.setItem("name",name);
-	localStorage.setItem("room",room);
-	localStorage.setItem("refreshed","true");
+	localStorage.setItem("name", name);
+	localStorage.setItem("room", room);
+	localStorage.setItem("refreshed", "true");
 	noSleep.disable();
-	setTimeout(function() { location.reload(false) },500);
+	setTimeout(function() {
+		if (window.navigator.onLine && !isOffline()) {
+			location.reload(false);
+		} else {
+			showNotification(_msg("DISCONNECTED", "Disconnected - Reconnecting..."), 0);
+			mainContainer.removeClass('warning').addClass('danger');
+			canReload = true;
+		}
+	},500);
 }
 
-function enableNoSleepAndJoin() {
-	//console.log("Enabling NoSleep...");
-	noSleep.enable();
-	enterroom();
+function isOffline() {
+	const url = window.location.origin + '/isOffline.js';
+	let xmlhttp = new XMLHttpRequest();
+	try {
+		xmlhttp.open("GET", url, false);
+		xmlhttp.send(null);
+	} catch (e) {
+		console.error(e);
+		return true;
+	}
+
+	return (xmlhttp.status !== 200 && xmlhttp.status !== 304);
 }
 
 $(document).ready(function() {
@@ -178,6 +198,7 @@ $(document).ready(function() {
 				return false;
 			}
 		});
+
 	usernameInput.keypress(
 		function(e) {
 			if (e.which === 13) {
@@ -191,8 +212,14 @@ $(document).ready(function() {
 
 	circle();
 
-	if (localStorage.getItem("refreshed") == "true") {
+	if (localStorage.getItem("refreshed") === "true") {
 		popup.hide();
+		playSoundDisabled = true;
+
+		$(document).one("click touchstart", function () {
+			playSoundDisabled = false;
+		});
+
 		name = localStorage.getItem("name");
 		room = localStorage.getItem("room");
 		getroom(room);
@@ -225,7 +252,7 @@ function changeIcon(imgSrc) {
     newLink.href='data:image/png;base64,' + imgSrc;
 }
 
-$(document).keydown(function(e) {
+$(window).keydown(function(e) {
 	if (e.which === 32) {
 		if (finished) {
 			e.preventDefault();
@@ -243,7 +270,7 @@ $(document).keydown(function(e) {
 });
 
 
-$(document).keyup(function(e) {
+$(window).keyup(function(e) {
 	if (e.which === 32 && finished && !canSpace) {
 		canSpace = true;
 	}
@@ -252,22 +279,12 @@ $(document).keyup(function(e) {
 $(window).resize(circle);
 
 function circle() {
-	/*
-	if (window.matchMedia("(max-width: 525px)").matches) {
-		let width = buzzBtn.width();
-		buzzBtn.css("height", width);
-		buzzBtn.css("border-radius", width/2);
-	}
-	else{
-		buzzBtn.css("border-radius", "5px");
-		buzzBtn.css("height", "");
-
-	} */
-
 	if (buzzBtn) {
-		let height = buzzBtn.height();
-		buzzBtn.css("width", height);
-		buzzBtn.css("border-radius", height/2);
+		let maxHeight = buzzBtn.parent().height();
+		let maxWidth = buzzBtn.parent().width();
+		let dimen = (maxWidth < maxHeight) ? maxWidth : maxHeight;
+		buzzBtn.css("width", dimen).css('height', dimen);
+		buzzBtn.css("border-radius", dimen/2);
 	}
 }
 
@@ -302,7 +319,7 @@ function togglesound() {
 }
 
 function playSound() {
-	if (playsound) {
+	if (playsound && !playSoundDisabled) {
 		document.getElementById(audio).play();
 	}
 }
@@ -392,8 +409,7 @@ function genRandomName() {
 socket.on('locked', function(msg, time) {
 	buzzBtn.addClass('locked').removeClass('default').text(_msg("LOCKED", 'LOCKED'));
 	playSound();
-	mainContainer.text(msg + _msg("BUZZED", " has buzzed"));
-	mainContainer.show(250);
+	showNotification(msg + _msg("BUZZED", " has buzzed"), 0);
 	clear.hide();
 	let ele = newEle("div", decodeDate(time) + " - " + msg + _msg("BUZZED", " buzzed"));
 	$(ele).addClass("history");
@@ -424,7 +440,7 @@ socket.on('your buzz', function(msg, time) {
 
 socket.on('clear', function() {
 	buzzBtn.addClass('default').removeClass('buzzed').removeClass('locked').text(_msg("BUZZ", "BUZZ")).prop("disabled", false);
-	mainContainer.text("").hide(350);
+	removeNotification();
 	clear.hide();
 	$(document).attr("title", title);
 	changeIcon(greenIcon);
@@ -444,6 +460,9 @@ socket.on('good name', function(msg) {
 	newLink.href = 'data:image/png;base64,' + greenIcon;
 	document.head.appendChild(newLink);
 	buzzBtn[0].addEventListener("touchend", buzz)
+
+	// As a final step, enable NoSleep.
+	noSleep.enable();
 	finished = true;
 });
 
@@ -511,12 +530,8 @@ socket.on('add names', function(msg, id, isNew, time) {
 		let ele = newEle("div", decodeDate(time) + " - " + JSON.parse(msg)[0] + _msg("HAS_JOINED", " has joined"));
 		$(ele).addClass('history');
 		historyHolder.prepend(ele);
-		mainContainer.text(JSON.parse(msg) + _msg("JOINED", " joined"));
-		mainContainer.show(250);
-		setTimeout(function() {
-			mainContainer.text("").hide(350);
-		}, 2500);
-		}
+		showNotification(JSON.parse(msg) + _msg("JOINED", " joined"));
+	}
 });
 
 socket.on('remove name', function(msg, time, id) {
@@ -524,12 +539,27 @@ socket.on('remove name', function(msg, time, id) {
 	$(ele).addClass('history');
 	historyHolder.prepend(ele);
 	$("#" + id).remove();
-	mainContainer.text(msg + _msg("LEFT", " left"));
-	mainContainer.show(250);
-	setTimeout(function() {
-		mainContainer.text("").hide(350);
-	}, 2500);
+	showNotification(msg + _msg("LEFT", " left"));
 });
+
+function showNotification(msg, duration) {
+	mainContainer.text(msg);
+	mainContainer.show(250);
+
+	if (duration) {
+		setTimeout(function() {
+			mainContainer.text("").hide(350);
+		}, duration);
+	} else if (duration !== 0 && !duration) {
+		setTimeout(function() {
+			mainContainer.text("").hide(350);
+		}, DEFAULT_NOTICE_DURATION);
+	}
+}
+
+function removeNotification() {
+	mainContainer.text("").hide(350);
+}
 
 socket.on('pong',function() {
 	lastping = Date.now();
@@ -537,8 +567,8 @@ socket.on('pong',function() {
 
 setInterval(function() {
 	socket.emit('ping');
-	if (Date.now()-lastping >= 10000 && !canReload) {
-		reload();
+	if (Date.now()-lastping >= 10000 && canReload) {
 		canReload = false;
+		reload();
 	}
 },2000)

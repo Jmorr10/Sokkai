@@ -38,7 +38,8 @@ sokkai.lang = (
             YOUR_BUZZ: '出番',
             INVALID_USERNAME: '効な名前、またはユーザー名がすでに使われている。',
             ROOM_FULL: 'という名前の部屋は現在満室です。後でもう一度試すか、他の部屋を選んでください。',
-            SELECT_LANGUAGE: '言語設定'
+            SELECT_LANGUAGE: '言語設定',
+            DISCONNECTED: '切断された - 再接続中'
         };
 
 
@@ -75,7 +76,8 @@ sokkai.lang = (
             YOUR_BUZZ: 'YOUR BUZZ',
             INVALID_USERNAME: 'Invalid name or username already taken',
             ROOM_FULL: ' is currently full. Try again later or choose another room.',
-            SELECT_LANGUAGE: 'Language'
+            SELECT_LANGUAGE: 'Language',
+            DISCONNECTED: 'Disconnected - Reconnecting...'
         }
 
         if (/^ja\b/.test(navigator.language)) {
