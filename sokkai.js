@@ -299,7 +299,8 @@ $(window).resize(circle);
 
 function circle() {
 	if (buzzBtn) {
-		let maxHeight = buzzBtn.parent().height();
+		let clearHeight = clear.outerHeight(true);
+		let maxHeight = (buzzBtn.parent().height() - clearHeight);
 		let maxWidth = buzzBtn.parent().width();
 		let dimen = (maxWidth < maxHeight) ? maxWidth : maxHeight;
 		buzzBtn.css("width", dimen).css('height', dimen);
