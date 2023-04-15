@@ -18,7 +18,7 @@
                 <div><h6 data-text="ROOMNAME_PH">Room</h6><div id="roomNameDisp">default</div></div>
                 <div style="flex:1;"><h6 data-text="USERNAME_PH">Username</h6><div id="userNameDisp"></div></div>
             </div>
-            <button id="togglesettings" onclick="togglesettings()" data-icon="☰"></button>
+            <button id="togglesettings" onclick="toggleSettings()" data-icon="☰"></button>
         </header>
         <div id="wrapper">
             <div id="popup">
@@ -28,8 +28,8 @@
                     Enter the room you would like to connect to. Leaving this blank will connect you to room <i>default</i>
                 </p>
                 <input id="roomnameinput" placeholder="Room name" data-text-placeholder="ROOMNAME_PH" autofocus/>
-                <button class="submit" onclick="enterroom()" data-text="SUBMIT">Submit</button>
-				<button class="submit" id="roomlistbutton" onclick="getroomlist()" data-text="GET_ROOM_LIST">Get Room List</button>
+                <button class="submit" id="submitRoomNameBtn" onclick="enterRoom()" data-text="SUBMIT">Submit</button>
+				<button class="submit" id="roomlistbutton" onclick="getRoomList()" data-text="GET_ROOM_LIST">Get Room List</button>
 
 				<select style="display:none;margin-top:1rem;" id="roomlist">
                     <option id="roomsListHeader" data-text="ACTIVE_ROOMS" selected disabled>Active Rooms</option>
@@ -38,7 +38,7 @@
             <div class="inputforms" id="username" style="display:none; height:16rem !important;">
                 <p data-text="USERNAME_FORM">Enter your username. Leaving this blank will assign you a random username.</p>
                 <input id="usernameinput" placeholder="Username" data-text-placeholder="USERNAME_PH"/>
-                <button class="submit" onclick="entername()" data-text="SUBMIT">Submit</button>
+                <button class="submit" id="submitUsernameBtn" onclick="enterName()" data-text="SUBMIT">Submit</button>
 				
             </div>
             <div id="container" style="display:none"></div>
@@ -46,22 +46,22 @@
             <button id="buzzbutton" class="default" onclick="buzz()" data-text="BUZZ">
                 BUZZ
             </button>
-            <button class="clear settings" onclick="clearbuzzer()" data-text="CLEAR">
+            <button class="clear settings" onclick="clearBuzzer()" data-text="CLEAR">
                 CLEAR
             </button>
         </div>
 
         <div id="settingsContainer">
-            <button id="togglesound" class="settings" onclick="togglesound()" data-text="TOGGLE_SOUND_ON" >
+            <button id="togglesound" class="settings" onclick="toggleSound()" data-text="TOGGLE_SOUND_ON" >
                 Sound: On
             </button>
-            <button id="changesound" class="settings" data-text="TOGGLE_SOUND_POP" onclick="changesound()" >
+            <button id="changesound" class="settings" data-text="TOGGLE_SOUND_POP" onclick="changeSound()" >
                 Sound: Pop
             </button>
-            <button id="infobutton" class="settings" data-text="TOGGLE_INFO_HIDE" onclick="toggleinfo()" >
+            <button id="infobutton" class="settings" data-text="TOGGLE_INFO_HIDE" onclick="toggleInfo()" >
                 Hide Info
             </button>
-            <button id="togglehist" class="settings" data-text="TOGGLE_HISTORY_HIDE" onclick="togglehistory()" >Hide History</button>
+            <button id="togglehist" class="settings" data-text="TOGGLE_HISTORY_HIDE" onclick="toggleHistory()" >Hide History</button>
             <button id="clearhist" data-text="CLEAR_HISTORY" class="settings" onclick="$('#history').empty()">
                 Clear history
             </button>

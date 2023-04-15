@@ -1,6 +1,7 @@
 // TODO: Cleanup and refactor previous creator's code.
+// FIXME: Sometimes connects to 'default' even if a room name is given (will usually assign a random server-side username too)
 
-let socket = io.connect(
+let socket = window.io.connect(
 	window.location.origin,
 	{
 		reconnection: true,
@@ -19,20 +20,20 @@ let noSleep = new NoSleep("Sokkai");
 let name = "";
 let room = "";
 let title = "";
-let playsound = true;
+let soundOn = true;
 let playSoundDisabled = false;
-let dispinfo = true;
-let disphist = true;
-let dispsettings = false;
+let dispInfo = true;
+let dispHist = true;
+let dispSettings = false;
 let sound = "pop";
 let audio = "sound";
 let buzzed = false;
-let emptyname = false;
+let emptyName = false;
 let finished = false;
 let canSpace = true;
-let lastping = Date.now();
+let lastPing = Date.now();
 let canReload = true;
-let lastbuzz = 0;
+let lastBuzz = 0;
 let timeoutID;
 let clearTimer;
 let newLink = document.createElement('link');
@@ -44,22 +45,22 @@ const DEFAULT_NOTICE_DURATION = 2500;
 let usernameInput;
 let roomNameInput;
 let roomListBtn;
-let roomnameForm;
+let roomNameForm;
 let usernameForm;
-let mainContainer
+let notificationContainer
 let buzzBtn;
 let infoBtn;
 let info;
 let historyHolder;
 let historyWrapper;
-let toggleHistory;
+let toggleHistoryBtn;
 let roomListEl;
 let roomListHeader;
 let clear;
 let popup;
 let usersHolder;
-let changeSound;
-let toggleSound;
+let changeSoundBtn;
+let toggleSoundBtn;
 let reconnectBtn;
 let clearHistoryBtn;
 let roomNameDisp;
@@ -69,28 +70,30 @@ let settingsBtn;
 let header;
 let footer;
 let languageSelector;
+let submitRoomNameBtn;
+let submitUsernameBtn;
 
 function init() {
 
 	usernameInput = $("#usernameinput")
 	roomNameInput = $("#roomnameinput");
 	roomListBtn = $("#roomlistbutton");
-	roomnameForm = $("#roomname");
+	roomNameForm = $("#roomname");
 	usernameForm = $("#username");
-	mainContainer = $("#container");
+	notificationContainer = $("#container");
 	buzzBtn = $("#buzzbutton");
 	infoBtn = $("#infobutton");
 	info = $("#info");
 	historyHolder = $("#history");
 	historyWrapper = $("#historywrapper");
-	toggleHistory = $("#togglehist");
+	toggleHistoryBtn = $("#togglehist");
 	roomListEl = $("#roomlist");
 	roomListHeader = $("#roomsListHeader");
 	clear = $('.clear');
 	popup = $("#popup");
 	usersHolder = $("#users");
-	changeSound = $("#changesound");
-	toggleSound = $("#togglesound");
+	changeSoundBtn = $("#changesound");
+	toggleSoundBtn = $("#togglesound");
 	reconnectBtn = $("#reconnect");
 	clearHistoryBtn = $("#clearhist");
 
@@ -102,65 +105,67 @@ function init() {
 	header = $('header');
 	footer = $('footer');
 	languageSelector = $('#langSelector');
+	submitRoomNameBtn = $('#submitRoomNameBtn');
+	submitUsernameBtn = $('#submitUsernameBtn');
 }
 
-function entername() {
+function enterName() {
+	submitUsernameBtn.attr('disabled', true);
 	if (usernameInput.val().trim().length > 0) {
 		name = usernameInput.val();
 	}
 	else{
-		emptyname = true;
+		emptyName = true;
 		name = genRandomName();
 	}
-	checkname(name);
+	checkName(name);
 }
 
-function checkname(str) {
-	if (typeof str == "undefined") {
-		socket.emit("check name", "");
-	}
-	else{
+function checkName(str) {
+	if (str) {
 		socket.emit("check name", str);
 	}
+
 	return false;
 }
-function enterroom() {
+function enterRoom() {
+	submitRoomNameBtn.attr("disabled", true);
+	roomListBtn.attr("disabled", true);
 	if (roomNameInput.val().length > 0) {
 		room = roomNameInput.val();
 	}
 	else {
 		room = "default";
 	}
-	//console.log(`Joining room: ${room}`);
-	getroom(room);
+
+	getRoom(room);
 }
-function getroom(str) {
-	if (typeof str == "undefined") {
+function getRoom(str) {
+	if (!str || str === "") {
 		socket.emit("send room", "");
 	}
 	else{
 		socket.emit("send room", str);
-		//console.log(`Emitted: send room - ${str}`);
 	}
 	return false;
 }
-function getroomlist() {
+function getRoomList() {
 	roomListBtn.text(_msg("REFRESH_LIST", "Refresh List"));
 	socket.emit("get roomlist");
 }
 
 function reload() {
-	lastping = Date.now();
+	lastPing = Date.now();
 	localStorage.setItem("name", name);
 	localStorage.setItem("room", room);
 	localStorage.setItem("refreshed", "true");
 	noSleep.disable();
 	setTimeout(function() {
 		if (window.navigator.onLine && !isOffline()) {
-			location.reload(false);
+			location.reload();
 		} else {
 			showNotification(_msg("DISCONNECTED", "Disconnected - Reconnecting..."), 0);
-			mainContainer.removeClass('warning').addClass('danger');
+			notificationContainer.removeClass('warning').addClass('danger');
 			canReload = true;
 		}
 	},500);
@@ -180,29 +185,34 @@ function isOffline() {
 	return (xmlhttp.status !== 200 && xmlhttp.status !== 304);
 }
 
+// noinspection JSDeprecatedSymbols
 $(document).ready(function() {
 
 	init();
 
-	roomnameForm.hide();
+	roomNameForm.hide();
 	usernameForm.hide();
-	mainContainer.hide();
+	notificationContainer.hide();
 	usernameInput.hide();
 	settingsContainer.hide();
 	clear.hide();
 
 	roomNameInput.keypress(
 		function(e) {
+			// e.which is normalized in jQuery
+			// noinspection JSDeprecatedSymbols
 			if (e.which === 13) {
-				enterroom();
+				enterRoom();
 				return false;
 			}
 		});
 
 	usernameInput.keypress(
 		function(e) {
+			// e.which is normalized in jQuery
+			// noinspection JSDeprecatedSymbols
 			if (e.which === 13) {
-				entername();
+				enterName();
 				return false;
 			}
 		}
@@ -214,30 +224,32 @@ $(document).ready(function() {
 
 	if (localStorage.getItem("refreshed") === "true") {
 		popup.hide();
-		playSoundDisabled = true;
 
+		// If the page was programmatically reloaded, then we can't play sounds until the user interacts with the screen.
+		// TODO: Test the playSoundDisabled fix on iPads. It doesn't seem to be necessary on Android tablets...
+		playSoundDisabled = true;
 		$(document).one("click touchstart", function () {
 			playSoundDisabled = false;
 		});
 
 		name = localStorage.getItem("name");
 		room = localStorage.getItem("room");
-		getroom(room);
+		getRoom(room);
 		usernameForm.hide();
 		setTimeout(function() {
-			checkname(name);
+			checkName(name);
 			localStorage.setItem("refreshed","");
 		},500);
-		
+
 	}
 	else{
-		roomnameForm.show();
+		roomNameForm.show();
 		usernameInput.val("");
 		roomNameInput.val("");
 	}
 
 	roomListEl.change(function() {
-		getroom($(this).val());
+		getRoom($(this).val());
 	});
 
 });
@@ -252,7 +264,11 @@ function changeIcon(imgSrc) {
     newLink.href='data:image/png;base64,' + imgSrc;
 }
 
+// noinspection JSDeprecatedSymbols
 $(window).keydown(function(e) {
+
+	// e.which is normalized in jQuery
+	// noinspection JSDeprecatedSymbols
 	if (e.which === 32) {
 		if (finished) {
 			e.preventDefault();
@@ -260,8 +276,8 @@ $(window).keydown(function(e) {
 				if (!buzzed) {
 					buzz();
 				}
-				else if (Date.now() - lastbuzz >= 500) {
-					clearbuzzer();
+				else if (Date.now() - lastBuzz >= 500) {
+					clearBuzzer();
 				}
 				canSpace = false;
 			}
@@ -269,13 +285,16 @@ $(window).keydown(function(e) {
 	}
 });
 
-
+// noinspection JSDeprecatedSymbols
 $(window).keyup(function(e) {
+	// e.which is normalized in jQuery
+	// noinspection JSDeprecatedSymbols
 	if (e.which === 32 && finished && !canSpace) {
 		canSpace = true;
 	}
 });
 
+// noinspection JSDeprecatedSymbols
 $(window).resize(circle);
 
 function circle() {
@@ -295,8 +314,8 @@ function buzz() {
 	return false;
 }
 
-function clearbuzzer() {
-	if (Date.now() - lastbuzz >= 250) {
+function clearBuzzer() {
+	if (Date.now() - lastBuzz >= 250) {
 		clearTimeout(timeoutID);
 		clearInterval(clearTimer);
 		socket.emit("clear", "");
@@ -305,62 +324,63 @@ function clearbuzzer() {
 	}
 }
 
-function togglesound() {
-	playsound = !playsound;
+function toggleSound() {
+	soundOn = !soundOn;
 
-	if (playsound) {
-		toggleSound.text(_msg("TOGGLE_SOUND_ON", "Sound: On"));
-		changeSound.show();
+	if (soundOn) {
+		toggleSoundBtn.text(_msg("TOGGLE_SOUND_ON", "Sound: On"));
+		changeSoundBtn.show();
 	}
 	else{
-		toggleSound.text(_msg("TOGGLE_SOUND_OFF", "Sound: Off"));
-		changeSound.hide();
+		toggleSoundBtn.text(_msg("TOGGLE_SOUND_OFF", "Sound: Off"));
+		changeSoundBtn.hide();
 	}
 }
 
 function playSound() {
-	if (playsound && !playSoundDisabled) {
+	// TODO: Test the playSoundDisabled fix on iPads. It doesn't seem to be necessary on Android tablets...
+	if (soundOn && !playSoundDisabled) {
 		document.getElementById(audio).play();
 	}
 }
 
-function changesound() {
+function changeSound() {
 	if (sound === "pop") {
 		sound = "buzz";
 		audio = "sound2";
-		changeSound.text(_msg("TOGGLE_SOUND_BUZZ", "Sound: Buzz"));
+		changeSoundBtn.text(_msg("TOGGLE_SOUND_BUZZ", "Sound: Buzz"));
 	}
 	else if (sound === "buzz") {
 		sound = "pop";
 		audio = "sound";
-		changeSound.text(_msg("TOGGLE_SOUND_POP", "Sound: Pop"));
+		changeSoundBtn.text(_msg("TOGGLE_SOUND_POP", "Sound: Pop"));
 	}
 }
 
-function toggleinfo() {
-	if (dispinfo) {
-		dispinfo = false;
+function toggleInfo() {
+	if (dispInfo) {
+		dispInfo = false;
 		footer.hide();
 		infoBtn.text(_msg("TOGGLE_INFO_SHOW", "Show Info"));
 	}
 	else{
-		dispinfo = true;
+		dispInfo = true;
 		footer.show();
 		infoBtn.text(_msg("TOGGLE_INFO_HIDE", "Hide Info"));
 	}
 	circle();
 }
 
-function togglesettings() {
-	if (dispsettings) {
-		dispsettings = false;
+function toggleSettings() {
+	if (dispSettings) {
+		dispSettings = false;
 		popup.hide();
 		settingsContainer.hide();
 		settingsBtn.attr('data-icon','☰');
 		header.css('z-index', 0);
 	}
 	else{
-		dispsettings = true;
+		dispSettings = true;
 		popup.show();
 		settingsContainer.show();
 		settingsBtn.attr('data-icon', '×');
@@ -368,18 +388,18 @@ function togglesettings() {
 	}
 }
 
-function togglehistory() {
-	if (disphist) {
-		disphist = false;
+function toggleHistory() {
+	if (dispHist) {
+		dispHist = false;
 		historyWrapper.addClass('hidden').hide();
 		clearHistoryBtn.hide();
-		toggleHistory.text(_msg("TOGGLE_HISTORY_SHOW", "Show History"));
+		toggleHistoryBtn.text(_msg("TOGGLE_HISTORY_SHOW", "Show History"));
 	}
 	else{
-		disphist = true;
+		dispHist = true;
 		historyWrapper.removeClass('hidden').show();
 		clearHistoryBtn.show();
-		toggleHistory.text(_msg("TOGGLE_HISTORY_HIDE", "Hide History"));
+		toggleHistoryBtn.text(_msg("TOGGLE_HISTORY_HIDE", "Hide History"));
 	}
 }
 
@@ -429,13 +449,13 @@ socket.on('your buzz', function(msg, time) {
 	$(span).text(msg+ _msg("BUZZED", " buzzed"));
 	$(div).addClass('history').append(span);
 	historyHolder.prepend(div);
-	lastbuzz = Date.now();
+	lastBuzz = Date.now();
 	clear.show().text(_msg("CLEAR", "CLEAR") + " 5");
 	clear.focus();
 	clearTimer = setInterval(function() {
 		clear.text(_msg("CLEAR", "CLEAR") + " " + (--t))
 	}, 1000);
-	timeoutID = setTimeout(clearbuzzer, 5000);
+	timeoutID = setTimeout(clearBuzzer, 5000);
 });
 
 socket.on('clear', function() {
@@ -467,21 +487,22 @@ socket.on('good name', function(msg) {
 });
 
 socket.on('bad name', function() {
-	if (emptyname) {
+	if (emptyName) {
 		name = genRandomName();
-		checkname(name);
+		checkName(name);
 	}
-	else{
+	else {
 		popup.show();
 		usernameForm.show();
+		submitUsernameBtn.removeAttr("disabled");
 		alert(_msg("INVALID_USERNAME", "Invalid name or username already taken"));
 	}
 });
 
 socket.on('get room', function(msg) {
 	//console.log("'get room' response received!");
-	roomnameForm.remove();
-	if (localStorage.getItem("refreshed") != "true") {
+	roomNameForm.remove();
+	if (localStorage.getItem("refreshed") !== "true") {
 		usernameForm.show();
 		usernameInput.show();
 	}
@@ -498,7 +519,7 @@ socket.on('room full', function(msg) {
 socket.on('send roomlist', function(msg) {
 	let roomlist = JSON.parse(msg);
 
-	if (Object.keys(roomlist).length == 0) {
+	if (Object.keys(roomlist).length === 0) {
 		roomListHeader.text(_msg("NO_ACTIVE_ROOMS", "No active rooms"));
 		roomListEl.show();
 	}
@@ -543,31 +564,31 @@ socket.on('remove name', function(msg, time, id) {
 });
 
 function showNotification(msg, duration) {
-	mainContainer.text(msg);
-	mainContainer.show(250);
+	notificationContainer.text(msg);
+	notificationContainer.show(250);
 
 	if (duration) {
 		setTimeout(function() {
-			mainContainer.text("").hide(350);
+			notificationContainer.text("").hide(350);
 		}, duration);
 	} else if (duration !== 0 && !duration) {
 		setTimeout(function() {
-			mainContainer.text("").hide(350);
+			notificationContainer.text("").hide(350);
 		}, DEFAULT_NOTICE_DURATION);
 	}
 }
 
 function removeNotification() {
-	mainContainer.text("").hide(350);
+	notificationContainer.text("").hide(350);
 }
 
 socket.on('pong',function() {
-	lastping = Date.now();
+	lastPing = Date.now();
 });
 
 setInterval(function() {
 	socket.emit('ping');
-	if (Date.now()-lastping >= 10000 && canReload) {
+	if (Date.now()-lastPing >= 10000 && canReload) {
 		canReload = false;
 		reload();
 	}
