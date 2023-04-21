@@ -31,7 +31,7 @@ let buzzed = false;
 let emptyName = false;
 let finished = false;
 let canSpace = true;
-let lastPing = Date.now();
+let lastPong = Date.now();
 let canReload = true;
 let lastBuzz = 0;
 let timeoutID;
@@ -151,7 +151,6 @@ function getRoom(savedRoom) {
 }
 
 function reload() {
-	lastPing = Date.now();
 	sessionStorage.setItem("name", name);
 	sessionStorage.setItem("room", room);
 	sessionStorage.setItem("refreshed", "true");
@@ -503,17 +502,21 @@ function showNotification(msg, duration) {
 	}
 }
 
+
+// FIXME: Check this
+// FIXME: Double check iPad sound fix
 function reconnect() {
 	if (reconnectionBtnEnabled()) {
 		reload();
 	} else {
+		console.warn(`Pong diff: ${Date.now() - lastPong}`);
 		alert(_msg("ALREADY_CONNECTED",
 			"You are already connected and don't need to reconnect. If you are experiencing issues, please refresh the page and join the room again."))
 	}
 }
 
 function reconnectionBtnEnabled() {
-	return Date.now() - lastPing >= 10000;
+	return (Date.now() - lastPong >= 10000);
 }
 
 function removeNotification() {
@@ -521,12 +524,12 @@ function removeNotification() {
 }
 
 socket.on('pong',function() {
-	lastPing = Date.now();
+	lastPong = Date.now();
 });
 
 setInterval(function() {
 	socket.emit('ping');
-	if (Date.now()-lastPing >= 10000 && canReload) {
+	if (Date.now()-lastPong >= 10000 && canReload) {
 		canReload = false;
 		reload();
 	}

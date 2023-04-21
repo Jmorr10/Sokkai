@@ -362,7 +362,7 @@ io.on('connection', function(socket) {
 		if (!rooms.hasOwnProperty(cleanRoom)) {
 			getSocketByID(socket.id)?.emit('no room', room);
 			return;
-		} else if (rooms[cleanRoom].users.length >= 41) {
+		} else if (rooms[cleanRoom].users.length >= 25) {
 			getSocketByID(socket.id)?.emit('room full', room);
 			return;
 		}
