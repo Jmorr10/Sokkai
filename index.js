@@ -273,6 +273,26 @@ function getSocketByID(id) {
 	return out;
 }
 
+//generates a random room code
+function genRandomRoomCode() {
+	let string = "";
+	const chars = "ABCDEFGHJKLMNPRSTUVWXYZ23456789";
+
+	while (true) {
+		for (let i = 0; i < 5; i++) {
+			string += chars.charAt(Math.floor(Math.random() * chars.length));
+		}
+		if (!rooms.hasOwnProperty(string)) {
+			break;
+		} else {
+			string = "";
+		}
+	}
+
+	return string;
+}
+
+
 // Socket connection stuff
 io.on('connection', function(socket) {
 	// Receives a buzz signal from the clients. Calls room's buzz method
@@ -335,15 +355,15 @@ io.on('connection', function(socket) {
 		let cleanRoom = room.toLowerCase();
 
 		if (cleanRoom.length === 0) {
-			cleanRoom = "default";
-			room = "default";
+			getSocketByID(socket.id)?.emit('null room');
+			return;
 		}
 
 		if (!rooms.hasOwnProperty(cleanRoom)) {
-			addRoom(new Room(room));
-		}
-		else if (rooms[cleanRoom].users.length >= 25) {
-			getSocketByID(socket.id)?.emit('room full', room)
+			getSocketByID(socket.id)?.emit('no room', room);
+			return;
+		} else if (rooms[cleanRoom].users.length >= 41) {
+			getSocketByID(socket.id)?.emit('room full', room);
 			return;
 		}
 
@@ -354,8 +374,31 @@ io.on('connection', function(socket) {
 
 	});
 
+	socket.on('new room', function (room) {
+		room = sanitize(room);
+		let cleanRoom = room.toLowerCase();
+
+		if (cleanRoom.length === 0) {
+			getSocketByID(socket.id)?.emit('null room');
+			return;
+		}
+
+		if (rooms.hasOwnProperty(cleanRoom)) {
+			room = genRandomRoomCode();
+			cleanRoom = room.toLowerCase();
+			getSocketByID(socket.id)?.emit('room taken', room);
+		}
+
+		addRoom(new Room(room));
+		socket.room = cleanRoom;
+		socket.join(cleanRoom);
+		getSocketByID(socket.id)?.emit('get room', rooms[cleanRoom].name);
+		delete roomReq[socket.id];
+
+	});
+
 	// Responds to pings from the client
-	socket.on('ping',function() {
+	socket.on('ping',function () {
 		socket.emit('pong');
 	});
 

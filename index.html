@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Sokkai</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, user-scalable=no" />
         <meta charset="UTF-8">
         <script src="/socket.io/socket.io.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
@@ -23,17 +23,17 @@
         <div id="wrapper">
             <div id="popup">
             </div>
-            <div class="inputforms" id="roomname" style="height:18.8125rem !important;">
-                <p data-text="ROOMNAME_FORM">
-                    Enter the room you would like to connect to. Leaving this blank will connect you to room <i>default</i>
+            <div class="inputforms" id="roomname" style="height:16.8125rem !important;">
+                <h2 data-text="ROOMNAME_PH" style="margin-top:0; margin-bottom:1rem;">Room Name</h2>
+                <p data-text="ROOMNAME_FORM" style="margin-bottom: 0;">
+                    You must first join or create a room. Please choose an option below.
                 </p>
-                <input id="roomnameinput" placeholder="Room name" data-text-placeholder="ROOMNAME_PH" autofocus/>
-                <button class="submit" id="submitRoomNameBtn" onclick="enterRoom()" data-text="SUBMIT">Submit</button>
-				<button class="submit" id="roomlistbutton" onclick="getRoomList()" data-text="GET_ROOM_LIST">Get Room List</button>
-
-				<select style="display:none;margin-top:1rem;" id="roomlist">
-                    <option id="roomsListHeader" data-text="ACTIVE_ROOMS" selected disabled>Active Rooms</option>
-                </select>
+                <div id="roomBtns" style="width: 100%">
+                    <button class="submit" id="createRoomBtn" data-text="CREATE_ROOM">Create</button>
+                    <button class="submit" id="joinRoomBtn" data-text="JOIN_ROOM">Join</button>
+                </div>
+                <input id="roomnameinput" placeholder="Room name" data-text-placeholder="ROOMNAME_PH" autofocus style="margin-top:1rem;"/>
+                <button class="submit" id="submitRoomNameBtn" data-text="SUBMIT">Submit</button>
             </div>
             <div class="inputforms" id="username" style="display:none; height:16rem !important;">
                 <p data-text="USERNAME_FORM">Enter your username. Leaving this blank will assign you a random username.</p>
@@ -65,7 +65,7 @@
             <button id="clearhist" data-text="CLEAR_HISTORY" class="settings" onclick="$('#history').empty()">
                 Clear history
             </button>
-            <button id="reconnect" class="settings" data-text="RECONNECT" onclick="reload()" >Reconnect</button>
+            <button id="reconnect" class="settings" data-text="RECONNECT" onclick="reconnect()" >Reconnect</button>
             <select id="langSelector" class="settings">
                 <option disabled selected data-text="SELECT_LANGUAGE">Language</option>
                 <option value="EN">English</option>

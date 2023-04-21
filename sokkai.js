@@ -44,7 +44,9 @@ const DEFAULT_NOTICE_DURATION = 2500;
 
 let usernameInput;
 let roomNameInput;
-let roomListBtn;
+let createRoomBtn;
+let joinRoomBtn;
+let roomBtns;
 let roomNameForm;
 let usernameForm;
 let notificationContainer
@@ -54,8 +56,6 @@ let info;
 let historyHolder;
 let historyWrapper;
 let toggleHistoryBtn;
-let roomListEl;
-let roomListHeader;
 let clear;
 let popup;
 let usersHolder;
@@ -72,12 +72,15 @@ let footer;
 let languageSelector;
 let submitRoomNameBtn;
 let submitUsernameBtn;
+let willCreateRoom = false;
 
 function init() {
 
 	usernameInput = $("#usernameinput")
 	roomNameInput = $("#roomnameinput");
-	roomListBtn = $("#roomlistbutton");
+	createRoomBtn = $('#createRoomBtn');
+	joinRoomBtn = $('#joinRoomBtn');
+	roomBtns = $('#roomBtns');
 	roomNameForm = $("#roomname");
 	usernameForm = $("#username");
 	notificationContainer = $("#container");
@@ -87,8 +90,6 @@ function init() {
 	historyHolder = $("#history");
 	historyWrapper = $("#historywrapper");
 	toggleHistoryBtn = $("#togglehist");
-	roomListEl = $("#roomlist");
-	roomListHeader = $("#roomsListHeader");
 	clear = $('.clear');
 	popup = $("#popup");
 	usersHolder = $("#users");
@@ -110,6 +111,11 @@ function init() {
 }
 
 function enterName() {
+
+	noSleep.enable();
+	document.getElementById("sound").load();
+	document.getElementById("sound2").load();
+
 	submitUsernameBtn.attr('disabled', true);
 	if (usernameInput.val().trim().length > 0) {
 		name = usernameInput.val();
@@ -128,37 +134,27 @@ function checkName(str) {
 
 	return false;
 }
-function enterRoom() {
+
+function getRoom(savedRoom) {
 	submitRoomNameBtn.attr("disabled", true);
-	roomListBtn.attr("disabled", true);
 	if (roomNameInput.val().length > 0) {
 		room = roomNameInput.val();
-	}
-	else {
-		room = "default";
+	} else if (savedRoom && savedRoom.length > 0) {
+		room = savedRoom;
+	} else {
+		alert(_msg("NULL_ROOMNAME", "You must enter a room name!"));
+		submitRoomNameBtn.removeAttr("disabled");
+		return;
 	}
 
-	getRoom(room);
-}
-function getRoom(str) {
-	if (!str || str === "") {
-		socket.emit("send room", "");
-	}
-	else{
-		socket.emit("send room", str);
-	}
-	return false;
-}
-function getRoomList() {
-	roomListBtn.text(_msg("REFRESH_LIST", "Refresh List"));
-	socket.emit("get roomlist");
+	socket.emit((willCreateRoom)? "new room" : "send room", room);
 }
 
 function reload() {
 	lastPing = Date.now();
-	localStorage.setItem("name", name);
-	localStorage.setItem("room", room);
-	localStorage.setItem("refreshed", "true");
+	sessionStorage.setItem("name", name);
+	sessionStorage.setItem("room", room);
+	sessionStorage.setItem("refreshed", "true");
 	noSleep.disable();
 	setTimeout(function() {
 		if (window.navigator.onLine && !isOffline()) {
@@ -184,75 +180,6 @@ function isOffline() {
 
 	return (xmlhttp.status !== 200 && xmlhttp.status !== 304);
 }
-
-// noinspection JSDeprecatedSymbols
-$(document).ready(function() {
-
-	init();
-
-	roomNameForm.hide();
-	usernameForm.hide();
-	notificationContainer.hide();
-	usernameInput.hide();
-	settingsContainer.hide();
-	clear.hide();
-
-	roomNameInput.keypress(
-		function(e) {
-			// e.which is normalized in jQuery
-			// noinspection JSDeprecatedSymbols
-			if (e.which === 13) {
-				enterRoom();
-				return false;
-			}
-		});
-
-	usernameInput.keypress(
-		function(e) {
-			// e.which is normalized in jQuery
-			// noinspection JSDeprecatedSymbols
-			if (e.which === 13) {
-				enterName();
-				return false;
-			}
-		}
-	);
-
-	languageSelector.change(selectLanguage)
-
-	circle();
-
-	if (localStorage.getItem("refreshed") === "true") {
-		popup.hide();
-
-		// If the page was programmatically reloaded, then we can't play sounds until the user interacts with the screen.
-		// TODO: Test the playSoundDisabled fix on iPads. It doesn't seem to be necessary on Android tablets...
-		playSoundDisabled = true;
-		$(document).one("click touchstart", function () {
-			playSoundDisabled = false;
-		});
-
-		name = localStorage.getItem("name");
-		room = localStorage.getItem("room");
-		getRoom(room);
-		usernameForm.hide();
-		setTimeout(function() {
-			checkName(name);
-			localStorage.setItem("refreshed","");
-		},500);
-
-	}
-	else{
-		roomNameForm.show();
-		usernameInput.val("");
-		roomNameInput.val("");
-	}
-
-	roomListEl.change(function() {
-		getRoom($(this).val());
-	});
-
-});
 
 function newEle(ele, text) {
 	ele = document.createElement(ele);
@@ -341,7 +268,8 @@ function toggleSound() {
 function playSound() {
 	// TODO: Test the playSoundDisabled fix on iPads. It doesn't seem to be necessary on Android tablets...
 	if (soundOn && !playSoundDisabled) {
-		document.getElementById(audio).play();
+		let el = document.getElementById(audio);
+		el.play();
 	}
 }
 
@@ -475,15 +403,16 @@ socket.on('good name', function(msg) {
 	let div = document.createElement("div");
 	$(div).append(newEle("span",msg));
 	usersHolder.prepend(div);
-	usernameForm.remove();
+	usernameForm.hide();
 	popup.hide();
 	newLink.rel = 'shortcut icon';
 	newLink.href = 'data:image/png;base64,' + greenIcon;
 	document.head.appendChild(newLink);
 	buzzBtn[0].addEventListener("touchend", buzz)
 
-	// As a final step, enable NoSleep.
-	noSleep.enable();
+	if (sessionStorage.getItem("refreshed") === "true") {
+		sessionStorage.setItem("refreshed", "");
+	}
 	finished = true;
 });
 
@@ -495,6 +424,7 @@ socket.on('bad name', function() {
 	else {
 		popup.show();
 		usernameForm.show();
+		usernameInput.show().focus();
 		submitUsernameBtn.removeAttr("disabled");
 		alert(_msg("INVALID_USERNAME", "Invalid name or username already taken"));
 	}
@@ -502,14 +432,17 @@ socket.on('bad name', function() {
 
 socket.on('get room', function(msg) {
 	//console.log("'get room' response received!");
-	roomNameForm.remove();
-	if (localStorage.getItem("refreshed") !== "true") {
-		usernameForm.show();
-		usernameInput.show();
-	}
-	usernameInput.focus();
+	roomNameForm.hide();
 	room = msg;
 	roomNameDisp.text(msg);
+	let storedName = sessionStorage.getItem("name");
+	if (sessionStorage.getItem("refreshed") !== "true") {
+		usernameForm.show();
+		usernameInput.show();
+		usernameInput.focus();
+	} else if (storedName && storedName !== "") {
+		checkName(storedName);
+	}
 });
 
 socket.on('room full', function(msg) {
@@ -517,29 +450,20 @@ socket.on('room full', function(msg) {
 	
 });
 
-socket.on('send roomlist', function(msg) {
-	let roomlist = JSON.parse(msg);
+socket.on('null room', function () {
+	alert(_msg("NULL_ROOMNAME", "You must enter a room name!"));
+	submitRoomNameBtn.removeAttr("disabled");
+});
 
-	if (Object.keys(roomlist).length === 0) {
-		roomListHeader.text(_msg("NO_ACTIVE_ROOMS", "No active rooms"));
-		roomListEl.show();
+socket.on('no room', function () {
+	if (sessionStorage.getItem("refreshed") !== "true") {
+		alert(_msg("NO_SUCH_ROOM", "The room you inputted does not exist."));
+		submitRoomNameBtn.removeAttr("disabled");
 	}
-	else{
-		roomListEl.children().not('[disabled]').remove();
-		let keys = Object.keys(roomlist);
-		keys.forEach(function(e) {
-			let num = roomlist[e]
-			let roomname = e;
-			if (e.length>23) {
-				e = e.substring(0,23)+"...";
-			}
-			let ele = newEle("option",e+": "+num+" users");
-			$(ele).attr('value', roomname);
-			roomListEl.append(ele);
-		});
-		roomListHeader.text(_msg("ACTIVE_ROOMS", "Active rooms"));
-		roomListEl.show();
-	}
+});
+
+socket.on('room taken', function () {
+	alert(_msg("ROOM_TAKEN", "That room name was already taken. We generated a random room code for you instead."));
 });
 
 socket.on('add names', function(msg, id, isNew, time) {
@@ -579,6 +503,19 @@ function showNotification(msg, duration) {
 	}
 }
 
+function reconnect() {
+	if (reconnectionBtnEnabled()) {
+		reload();
+	} else {
+		alert(_msg("ALREADY_CONNECTED",
+			"You are already connected and don't need to reconnect. If you are experiencing issues, please refresh the page and join the room again."))
+	}
+}
+
+function reconnectionBtnEnabled() {
+	return Date.now() - lastPing >= 10000;
+}
+
 function removeNotification() {
 	notificationContainer.text("").hide(350);
 }
@@ -593,4 +530,98 @@ setInterval(function() {
 		canReload = false;
 		reload();
 	}
-},2000)
+},2000);
+
+// noinspection JSDeprecatedSymbols
+$(document).ready(function() {
+
+	init();
+
+	roomNameForm.hide();
+	usernameForm.hide();
+	notificationContainer.hide();
+	submitRoomNameBtn.hide();
+	roomNameInput.hide();
+	usernameInput.hide();
+	settingsContainer.hide();
+	clear.hide();
+
+
+	roomBtns.children('button').click(function (e) {
+		willCreateRoom = (this.id === createRoomBtn[0].id);
+		roomBtns.hide();
+		roomNameInput.show().focus();
+		submitRoomNameBtn.show().click(function() {
+			getRoom();
+			return false;
+		});
+	});
+
+	roomNameInput.keypress(
+		function(e) {
+			// e.which is normalized in jQuery
+			// noinspection JSDeprecatedSymbols
+			if (e.which === 13) {
+				getRoom();
+				return false;
+			}
+		});
+
+	usernameInput.keypress(
+		function(e) {
+			// e.which is normalized in jQuery
+			// noinspection JSDeprecatedSymbols
+			if (e.which === 13) {
+				enterName();
+				return false;
+			}
+		}
+	);
+
+	languageSelector.change(selectLanguage)
+
+	circle();
+
+	if (sessionStorage.getItem("refreshed") === "true") {
+		popup.hide();
+
+		// If the page was programmatically reloaded, then we can't play sounds until the user interacts with the screen.
+		// TODO: Test the playSoundDisabled fix on iPads. It doesn't seem to be necessary on Android tablets...
+		playSoundDisabled = true;
+		$(document).one("click touchstart", function () {
+			playSoundDisabled = false;
+		});
+
+		name = sessionStorage.getItem("name");
+		room = sessionStorage.getItem("room");
+
+		if (room !== "" && name !== "") {
+			getRoom(room);
+			usernameForm.hide();
+
+			let listener = function (eventName) {
+				switch (eventName) {
+					case "get room":
+						checkName(name);
+						break;
+					case "no room":
+						willCreateRoom = true;
+						getRoom(room);
+					case "room full":
+						popup.show();
+						roomNameForm.show();
+				}
+
+				socket.offAny(listener);
+			}
+
+			socket.onAny(listener);
+		}
+	}
+	else{
+		roomNameForm.show();
+		usernameInput.val("");
+		roomNameInput.val("");
+	}
+
+});
