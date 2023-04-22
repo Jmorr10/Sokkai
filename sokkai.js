@@ -1,5 +1,4 @@
 // TODO: Cleanup and refactor previous creator's code.
-// FIXME: Sometimes connects to 'default' even if a room name is given (will usually assign a random server-side username too)
 
 let socket = window.io.connect(
 	window.location.origin,
@@ -25,8 +24,8 @@ let playSoundDisabled = false;
 let dispInfo = true;
 let dispHist = true;
 let dispSettings = false;
-let sound = "pop";
-let audio = "sound";
+let sound = "buzz";
+let audio = "sound2";
 let buzzed = false;
 let emptyName = false;
 let finished = false;
@@ -73,6 +72,7 @@ let languageSelector;
 let submitRoomNameBtn;
 let submitUsernameBtn;
 let willCreateRoom = false;
+let showQRCodeBtn;
 
 function init() {
 
@@ -108,6 +108,11 @@ function init() {
 	languageSelector = $('#langSelector');
 	submitRoomNameBtn = $('#submitRoomNameBtn');
 	submitUsernameBtn = $('#submitUsernameBtn');
+	showQRCodeBtn = $('#showQRCode');
+}
+
+function showQRCode() {
+	window.open(window.location.origin + "/qr/" + room, '_blank');
 }
 
 function enterName() {
@@ -226,7 +231,7 @@ $(window).resize(circle);
 function circle() {
 	if (buzzBtn) {
 		let clearHeight = clear.outerHeight(true);
-		let maxHeight = (buzzBtn.parent().height() - clearHeight);
+		let maxHeight =  $('body').outerHeight(true) - header.outerHeight(true) - footer.outerHeight(true) - clearHeight;
 		let maxWidth = buzzBtn.parent().width();
 		let dimen = (maxWidth < maxHeight) ? maxWidth : maxHeight;
 		buzzBtn.css("width", dimen).css('height', dimen);
@@ -264,10 +269,15 @@ function toggleSound() {
 	}
 }
 
-function playSound() {
+function playSound(specifiedSound) {
 	// TODO: Test the playSoundDisabled fix on iPads. It doesn't seem to be necessary on Android tablets...
 	if (soundOn && !playSoundDisabled) {
-		let el = document.getElementById(audio);
+		const availableSounds = {buzz: "sound2", pop: "sound"};
+		let el;
+		let audioKey = (specifiedSound && Object.keys(availableSounds).includes(specifiedSound)) ?
+			availableSounds[specifiedSound] : audio;
+
+		el = document.getElementById(audioKey);
 		el.play();
 	}
 }
@@ -304,14 +314,14 @@ function toggleSettings() {
 		dispSettings = false;
 		popup.hide();
 		settingsContainer.hide();
-		settingsBtn.attr('data-icon','☰');
+		settingsBtn.children('i').attr('class','icon-menu');
 		header.css('z-index', 0);
 	}
 	else{
 		dispSettings = true;
 		popup.show();
 		settingsContainer.show();
-		settingsBtn.attr('data-icon', '×');
+		settingsBtn.children('i').attr('class','icon-cancel');
 		header.css('z-index', 3);
 	}
 }
@@ -356,7 +366,7 @@ function genRandomName() {
 
 socket.on('locked', function(msg, time) {
 	buzzBtn.addClass('locked').removeClass('default').text(_msg("LOCKED", 'LOCKED'));
-	playSound();
+	playSound("pop");
 	showNotification(msg + _msg("BUZZED", " has buzzed"), 0);
 	clear.hide();
 	let ele = newEle("div", decodeDate(time) + " - " + msg + _msg("BUZZED", " buzzed"));
@@ -370,7 +380,7 @@ socket.on('your buzz', function(msg, time) {
 	buzzed = true;
 	buzzBtn.addClass('buzzed').removeClass('default').text(_msg("YOUR_BUZZ", " YOUR BUZZ")).prop("disabled", true);
 	let t = 5;
-	playSound();
+	playSound(sound);
 	let div = document.createElement("div");
 	$(div).text(decodeDate(time)+" - ");
 	let span = document.createElement("span");
@@ -412,6 +422,12 @@ socket.on('good name', function(msg) {
 	if (sessionStorage.getItem("refreshed") === "true") {
 		sessionStorage.setItem("refreshed", "");
 	}
+
+	if (willCreateRoom) {
+		showQRCodeBtn.show();
+	}
+
+
 	finished = true;
 });
 
@@ -502,9 +518,6 @@ function showNotification(msg, duration) {
 	}
 }
 
-
-// FIXME: Check this
-// FIXME: Double check iPad sound fix
 function reconnect() {
 	if (reconnectionBtnEnabled()) {
 		reload();
@@ -547,8 +560,18 @@ $(document).ready(function() {
 	roomNameInput.hide();
 	usernameInput.hide();
 	settingsContainer.hide();
+	showQRCodeBtn.hide();
 	clear.hide();
 
+
+	if (window.location.pathname.indexOf("room") !== -1) {
+		let urlROOM = window.location.pathname.split("/");
+		urlROOM = (urlROOM && urlROOM.length > 1) ? urlROOM[urlROOM.length - 1] : null;
+
+		if (urlROOM) {
+			getRoom(urlROOM);
+		}
+	}
 
 	roomBtns.children('button').click(function (e) {
 		willCreateRoom = (this.id === createRoomBtn[0].id);

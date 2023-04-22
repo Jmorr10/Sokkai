@@ -22,7 +22,9 @@ let roomReq = {};
 
 const ALLOWED_FILES = ['', 'index.html', 'style.css',
 	'pop.mp3', 'socketio.js', 'sokkai.js', 'buzzsound.mp3',
-	'NoSleep.min.js', 'lang.js', 'isOffline.js'
+	'NoSleep.min.js', 'lang.js', 'isOffline.js', 'qr.html', 'qrcode.js', 'css/sokkai.css',
+	'css/animation.css', 'css/sokkai-codes.css', 'css/sokkai-embedded.css', 'css/sokkai-ie7.css', 'css/sokkai-ie7-codes.css',
+	'font/sokkai.eot', 'font/sokkai.svg', 'font/sokkai.ttf', 'font/sokkai.woff', 'font/sokkai.woff2', 'jquery-1.11.3.min.js'
 ];
 
 
@@ -125,10 +127,20 @@ app.use(compression(zlib.Z_BEST_COMPRESSION));
 
 // Allows the server to send files to the client in response to an HTTP GET request
 ALLOWED_FILES.forEach(function(a) {
+	if (a === "qr.html") { return; }
 	app.get('/' + a, function(req, res) {
 		res.sendFile(__dirname + '/' + a);
 	});
 });
+
+app.get('/qr/:room', function(req, res) {
+	res.sendFile(__dirname + '/qr.html');
+});
+
+app.get('/room/:room', function (req, res) {
+	res.sendFile(__dirname + '/index.html');
+});
+
 
 // Sends a 404 error if the requested resource is not found
 app.use(function(req, res) {

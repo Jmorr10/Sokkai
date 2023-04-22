@@ -5,20 +5,21 @@
         <meta name="viewport" content="width=device-width, user-scalable=no" />
         <meta charset="UTF-8">
         <script src="/socket.io/socket.io.js"></script>
-        <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-        <audio id="sound" src="pop.mp3" preload="auto"></audio>
+        <script src="/jquery-1.11.3.min.js"></script>
+        <audio id="sound" src="/pop.mp3" preload="auto"></audio>
         <!--CC Attribution 3.0: http://soundbible.com/2067-Blop.html-->
-        <audio id="sound2" src="buzzsound.mp3" preload="auto"></audio>
-       
+        <audio id="sound2" src="/buzzsound.mp3" preload="auto"></audio>
+        <link rel="stylesheet" type="text/css" href="/style.css">
+        <link rel="stylesheet" type="text/css" href="/css/sokkai.css">
     </head>
     <body>
-		<link rel="stylesheet" type="text/css" href="style.css">
         <header>
             <div id="info">
                 <div><h6 data-text="ROOMNAME_PH">Room</h6><div id="roomNameDisp">default</div></div>
+                <button id="showQRCode" onclick="showQRCode()" style="margin-left: 1rem;"><i class="icon-qrcode"></i></button>
                 <div style="flex:1;"><h6 data-text="USERNAME_PH">Username</h6><div id="userNameDisp"></div></div>
             </div>
-            <button id="togglesettings" onclick="toggleSettings()" data-icon="☰"></button>
+            <button id="togglesettings" onclick="toggleSettings()"><i class="icon-menu"></i></button>
         </header>
         <div id="wrapper">
             <div id="popup">
@@ -55,8 +56,8 @@
             <button id="togglesound" class="settings" onclick="toggleSound()" data-text="TOGGLE_SOUND_ON" >
                 Sound: On
             </button>
-            <button id="changesound" class="settings" data-text="TOGGLE_SOUND_POP" onclick="changeSound()" >
-                Sound: Pop
+            <button id="changesound" class="settings" data-text="TOGGLE_SOUND_BUZZ" onclick="changeSound()" >
+                Sound: Buzz
             </button>
             <button id="infobutton" class="settings" data-text="TOGGLE_INFO_HIDE" onclick="toggleInfo()" >
                 Hide Info
@@ -74,16 +75,19 @@
         </div>
         <footer>
             <div id="historywrapper">
-                <h6 data-text="HISTORY">HISTORY</h6>
+                <div style="display: flex; flex-direction: row; position: relative;">
+                    <h6 data-text="HISTORY" style="text-align: left;">HISTORY</h6>
+                    <button id="clearHistShortBtn" onclick="$('#history').empty()"><i class="icon-trash"></i></button>
+                </div>
                 <div id="history"></div>
             </div>
             <div id ="ulistwrapper">
-                <h6 data-text="USERS">USERS</h6>
+                <h6 data-text="USERS" style="text-align: left;">USERS</h6>
                 <div id="users"></div>
             </div>
         </footer>
     </body>
-    <script src="lang.js"></script>
-    <script src="NoSleep.min.js"></script>
-    <script src="sokkai.js"></script>
+    <script src="/lang.js"></script>
+    <script src="/NoSleep.min.js"></script>
+    <script src="/sokkai.js"></script>
 </html>
