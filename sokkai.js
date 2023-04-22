@@ -316,6 +316,9 @@ function toggleSettings() {
 		settingsContainer.hide();
 		settingsBtn.children('i').attr('class','icon-menu');
 		header.css('z-index', 0);
+		if (willCreateRoom) {
+			showQRCodeBtn.show();
+		}
 	}
 	else{
 		dispSettings = true;
@@ -323,6 +326,9 @@ function toggleSettings() {
 		settingsContainer.show();
 		settingsBtn.children('i').attr('class','icon-cancel');
 		header.css('z-index', 3);
+		if (willCreateRoom) {
+			showQRCodeBtn.hide();
+		}
 	}
 }
 
@@ -564,12 +570,14 @@ $(document).ready(function() {
 	clear.hide();
 
 
-	if (window.location.pathname.indexOf("room") !== -1) {
-		let urlROOM = window.location.pathname.split("/");
-		urlROOM = (urlROOM && urlROOM.length > 1) ? urlROOM[urlROOM.length - 1] : null;
+	let urlRoom;
 
-		if (urlROOM) {
-			getRoom(urlROOM);
+	if (window.location.pathname.indexOf("room") !== -1) {
+		urlRoom = window.location.pathname.split("/");
+		urlRoom = (urlRoom && urlRoom.length > 1) ? urlRoom[urlRoom.length - 1] : null;
+
+		if (urlRoom) {
+			getRoom(urlRoom);
 		}
 	}
 
@@ -608,7 +616,14 @@ $(document).ready(function() {
 
 	circle();
 
-	if (sessionStorage.getItem("refreshed") === "true") {
+	let sessionName = sessionStorage.getItem("name");
+	let sessionRoom = sessionStorage.getItem("room");
+	let sessionRefreshed = sessionStorage.getItem("refreshed");
+
+	let isProperRefresh = (sessionName && sessionName !== "" && sessionRoom && sessionName !== "" && sessionRefreshed === "true");
+
+
+	if (isProperRefresh) {
 		popup.hide();
 
 		// If the page was programmatically reloaded, then we can't play sounds until the user interacts with the screen.
@@ -618,8 +633,8 @@ $(document).ready(function() {
 			playSoundDisabled = false;
 		});
 
-		name = sessionStorage.getItem("name");
-		room = sessionStorage.getItem("room");
+		name = sessionName
+		room = sessionRoom
 
 		if (room !== "" && name !== "") {
 			getRoom(room);
@@ -633,9 +648,11 @@ $(document).ready(function() {
 					case "no room":
 						willCreateRoom = true;
 						getRoom(room);
+						break;
 					case "room full":
 						popup.show();
 						roomNameForm.show();
+						break;
 				}
 
 				socket.offAny(listener);
@@ -645,9 +662,13 @@ $(document).ready(function() {
 		}
 	}
 	else{
-		roomNameForm.show();
-		usernameInput.val("");
-		roomNameInput.val("");
-	}
 
+		sessionStorage.clear();
+
+		if (!urlRoom) {
+			roomNameForm.show();
+			usernameInput.val("");
+			roomNameInput.val("");
+		}
+	}
 });
