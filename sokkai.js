@@ -20,6 +20,7 @@ let name = "";
 let room = "";
 let title = "";
 let soundOn = true;
+let notificationsOn = false;
 let playSoundDisabled = false;
 let dispInfo = true;
 let dispHist = true;
@@ -60,6 +61,7 @@ let popup;
 let usersHolder;
 let changeSoundBtn;
 let toggleSoundBtn;
+let toggleNotificationsBtn;
 let reconnectBtn;
 let clearHistoryBtn;
 let roomNameDisp;
@@ -95,6 +97,7 @@ function init() {
 	usersHolder = $("#users");
 	changeSoundBtn = $("#changesound");
 	toggleSoundBtn = $("#togglesound");
+	toggleNotificationsBtn = $("#toggleNotifications");
 	reconnectBtn = $("#reconnect");
 	clearHistoryBtn = $("#clearhist");
 
@@ -256,6 +259,28 @@ function clearBuzzer() {
 	}
 }
 
+function toggleNotifications() {
+	notificationsOn = !notificationsOn;
+	let hasPermission = Notification.permission === "granted";
+	let shouldAsk = (!hasPermission && notificationsOn);
+
+	if (shouldAsk) {
+		Notification.requestPermission().then(function (permission) {
+			if (permission !== "granted") {
+				alert(_msg("MUST_ALLOW_NOTICE", "You must accept the notification permission request to use this feature."))
+				toggleNotificationsBtn.text(_msg("TOGGLE_NOTICE_OFF", "Notifications: OFF"));
+				notificationsOn = false;
+			}
+		});
+	}
+
+	if (notificationsOn) {
+		toggleNotificationsBtn.text(_msg("TOGGLE_NOTICE_ON", "Notifications: ON"));
+	} else {
+		toggleNotificationsBtn.text(_msg("TOGGLE_NOTICE_OFF", "Notifications: OFF"));
+	}
+}
+
 function toggleSound() {
 	soundOn = !soundOn;
 
@@ -375,11 +400,17 @@ socket.on('locked', function(msg, time) {
 	playSound("pop");
 	showNotification(msg + _msg("BUZZED", " has buzzed"), 0);
 	clear.hide();
-	let ele = newEle("div", decodeDate(time) + " - " + msg + _msg("BUZZED", " buzzed"));
+
+	let message = msg + _msg("BUZZED", " buzzed");
+
+	let ele = newEle("div", decodeDate(time) + " - " + message);
 	$(ele).addClass("history");
 	historyHolder.prepend(ele);
-	$(document).attr("title", msg + _msg("BUZZED", " buzzed"));
+	$(document).attr("title", message);
 	changeIcon(redIcon);
+	if (notificationsOn && Notification.permission === "granted" && document.visibilityState !== "visible") {
+		const notification = new Notification("Sokkai (速解)", { body: message, renotify: true, tag:"Sokkai (速解)" });
+	}
 });
 
 socket.on('your buzz', function(msg, time) {

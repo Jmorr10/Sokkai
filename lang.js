@@ -12,6 +12,8 @@ sokkai.lang = (
             USERNAME_PH: 'ユーザー名',
             SUBMIT: '送信',
             CLEAR: '消す',
+            TOGGLE_NOTICE_OFF: '通知: オフ',
+            TOGGLE_NOTICE_ON: '通知: オン',
             TOGGLE_SOUND_ON: '音： オン',
             TOGGLE_SOUND_OFF: '音： オフ',
             TOGGLE_SOUND_POP: '音：ポップ',
@@ -41,7 +43,8 @@ sokkai.lang = (
             DISCONNECTED: '切断された - 再接続中',
             CREATE_ROOM: '作成',
             JOIN_ROOM: '参加',
-            ALREADY_CONNECTED: "すでに接続されていますので、再接続の必要はありません。問題が発生した場合は、ページを更新して再度ルームに参加してください。"
+            ALREADY_CONNECTED: "すでに接続されていますので、再接続の必要はありません。問題が発生した場合は、ページを更新して再度ルームに参加してください。",
+            MUST_ALLOW_NOTICE: "この機能を使用するには、通知許可要求を承諾する必要があります。"
         };
 
 
@@ -52,6 +55,8 @@ sokkai.lang = (
             USERNAME_PH: 'Username',
             SUBMIT: 'Submit',
             CLEAR: 'Clear',
+            TOGGLE_NOTICE_OFF: 'Notifications: OFF',
+            TOGGLE_NOTICE_ON: 'Notifications: ON',
             TOGGLE_SOUND_ON: 'Sound: ON',
             TOGGLE_SOUND_OFF: 'Sound: OFF',
             TOGGLE_SOUND_POP: 'Sound: Pop',
@@ -81,7 +86,8 @@ sokkai.lang = (
             DISCONNECTED: 'Disconnected - Reconnecting...',
             JOIN_ROOM: "Join",
             CREATE_ROOM: "Create",
-            ALREADY_CONNECTED: "You are already connected and don't need to reconnect. If you are experiencing issues, please refresh the page and join the room again."
+            ALREADY_CONNECTED: "You are already connected and don't need to reconnect. If you are experiencing issues, please refresh the page and join the room again.",
+            MUST_ALLOW_NOTICE: "You must accept the notification permission request to use this feature."
         }
 
         if (/^ja\b/.test(navigator.language)) {
