@@ -49,7 +49,7 @@ let joinRoomBtn;
 let roomBtns;
 let roomNameForm;
 let usernameForm;
-let notificationContainer
+let notificationContainer;
 let buzzBtn;
 let infoBtn;
 let info;
@@ -559,7 +559,7 @@ function reconnect() {
 	if (reconnectionBtnEnabled()) {
 		reload();
 	} else {
-		console.warn(`Pong diff: ${Date.now() - lastPong}`);
+		//console.warn(`Pong diff: ${Date.now() - lastPong}`);
 		alert(_msg("ALREADY_CONNECTED",
 			"You are already connected and don't need to reconnect. If you are experiencing issues, please refresh the page and join the room again."))
 	}
