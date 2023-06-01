@@ -80,6 +80,17 @@ h6 {
 	max-width: 200px;
 }
 
+.logo {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-top: 0;
+}
+
+.logo > img {
+	max-height: 3rem;
+}
+
 .submit:hover {
 	background-color: #3e89e0;
 }

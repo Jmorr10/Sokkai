@@ -21,7 +21,7 @@ let ips = {"": ""};
 let roomReq = {};
 
 const ALLOWED_FILES = ['', 'index.html', 'style.css',
-	'pop.mp3', 'socketio.js', 'sokkai.js', 'buzzsound.mp3',
+	'pop.mp3', 'socketio.js', 'sokkai.js', 'buzzsound.mp3', 'logo.svg',
 	'NoSleep.min.js', 'lang.js', 'isOffline.js', 'qr.html', 'qrcode.js', 'css/sokkai.css',
 	'css/animation.css', 'css/sokkai-codes.css', 'css/sokkai-embedded.css', 'css/sokkai-ie7.css', 'css/sokkai-ie7-codes.css',
 	'font/sokkai.eot', 'font/sokkai.svg', 'font/sokkai.ttf', 'font/sokkai.woff', 'font/sokkai.woff2', 'jquery-1.11.3.min.js'
